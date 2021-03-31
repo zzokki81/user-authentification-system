@@ -1,18 +1,43 @@
 package main
 
 import (
+	"os"
+	"strconv"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	echomiddleware "github.com/labstack/echo/v4/middleware"
 	"github.com/zzokki81/uas/handler"
 	"github.com/zzokki81/uas/interactor"
+	"github.com/zzokki81/uas/store/postgres"
 	"gopkg.in/tylerb/graceful.v1"
 )
 
 func main() {
 
-	healthInteractor := interactor.NewHealthCheck()
+	err := godotenv.Load()
+	if err != nil {
+		panic(err)
+	}
+	port, err := strconv.Atoi(os.Getenv("DB_PORT"))
+	if err != nil {
+		panic(err)
+	}
+	config := postgres.PostgresConfig{
+		Host:     os.Getenv("DB_HOST"),
+		Port:     port,
+		User:     os.Getenv("DB_USER"),
+		Password: os.Getenv("DB_PASSWORD"),
+		Name:     os.Getenv("DB_NAME"),
+	}
+
+	store, err := postgres.Open(config)
+	if err != nil {
+		panic(err)
+	}
+	defer store.Close()
+	healthInteractor := interactor.NewHealthCheck(store)
 	healthCheckHandler := handler.NewHealthChecker(healthInteractor)
 	e := echo.New()
 	e.Use(echomiddleware.Logger())
