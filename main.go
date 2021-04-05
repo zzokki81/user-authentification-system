@@ -44,7 +44,6 @@ func main() {
 		panic(err)
 	}
 	defer store.Close()
-
 	sessionAuthKey := os.Getenv("SESSION_AUTH_KEY")
 	sessionEncryptionKey := os.Getenv("SESSION_ENCRYPTION_KEY")
 	rawSessionAuthKey, err := base64.StdEncoding.DecodeString(sessionAuthKey)
